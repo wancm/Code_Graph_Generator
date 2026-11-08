@@ -1,0 +1,10 @@
+@page "/orders"
+
+<h1>Orders</h1>
+<Badge Text="@Label" />
+
+@code {
+    private readonly Order _order = new(7, 10m);
+
+    private string Label => _order.Total.ToString("N2");
+}

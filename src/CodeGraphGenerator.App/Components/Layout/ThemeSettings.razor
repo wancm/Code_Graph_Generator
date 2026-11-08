@@ -1,0 +1,77 @@
+@* Theme settings panel (MyFav1 offcanvas). Radios carry data-mf-setting; myfav1.js applies, saves and re-checks them. *@
+<div class="offcanvas offcanvas-end theme-settings" tabindex="-1" id="theme-settings-offcanvas" aria-labelledby="theme-settings-title">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-semibold" id="theme-settings-title">Theme Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div class="settings-group">
+            <h5>Color Scheme</h5>
+            <div class="settings-options">
+                @Option("theme", "light", "Light", @<span class="theme-swatch"><i class="ti ti-sun text-warning"></i></span>)
+                @Option("theme", "dark", "Dark", @<span class="theme-swatch"><i class="ti ti-moon-stars text-primary"></i></span>)
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h5>Layout Mode</h5>
+            <div class="settings-options">
+                @Option("layoutMode", "fluid", "Fluid", @<span class="theme-swatch"><span class="swatch-layout"><i></i><i></i></span></span>)
+                @Option("layoutMode", "detached", "Detached", @<span class="theme-swatch p-1"><span class="swatch-layout" style="grid-template-columns: 1fr; grid-template-rows: 8px 1fr"><i></i><i></i></span></span>)
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h5>Topbar Color</h5>
+            <div class="settings-options">
+                @Option("topbarColor", "light", "Light", Dot("#ffffff"))
+                @Option("topbarColor", "dark", "Dark", Dot("#313a46"))
+                @Option("topbarColor", "brand", "Brand", Dot("linear-gradient(135deg, #6379c3, #546ee5)"))
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h5>Menu Color</h5>
+            <div class="settings-options">
+                @Option("menuColor", "light", "Light", Dot("#ffffff"))
+                @Option("menuColor", "dark", "Dark", Dot("#232e51"))
+                @Option("menuColor", "brand", "Brand", Dot("linear-gradient(135deg, #6379c3, #546ee5)"))
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h5>Sidebar Size</h5>
+            <div class="settings-options">
+                @Option("sidenavSize", "default", "Default", Icon("ti ti-layout-sidebar"))
+                @Option("sidenavSize", "compact", "Compact", Icon("ti ti-layout-sidebar-left-collapse"))
+                @Option("sidenavSize", "condensed", "Icon View", Icon("ti ti-layout-sidebar-inactive"))
+                @Option("sidenavSize", "sm-hover", "On Hover", Icon("ti ti-hand-move"))
+                @Option("sidenavSize", "full", "Hidden", Icon("ti ti-layout-off"))
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas-footer border-top border-dashed p-3 text-center">
+        <button type="button" class="btn btn-soft-danger w-100" data-mf-action="reset">Reset to defaults</button>
+    </div>
+</div>
+
+@code {
+    private static RenderFragment Option(string key, string value, string label, RenderFragment swatch) => __builder =>
+    {
+        <label class="theme-option">
+            <input type="radio" name="mf-@key" value="@value" data-mf-setting="@key" />
+            @swatch
+            <span>@label</span>
+        </label>
+    };
+
+    private static RenderFragment Dot(string background) => __builder =>
+    {
+        <span class="theme-swatch"><span class="dot" style="background: @background"></span></span>
+    };
+
+    private static RenderFragment Icon(string icon) => __builder =>
+    {
+        <span class="theme-swatch"><i class="@icon"></i></span>
+    };
+}

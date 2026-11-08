@@ -1,0 +1,48 @@
+@* Left navigation (MyFav1). The pin and close buttons use data-mf-action, handled by myfav1.js. *@
+<div class="sidenav-menu">
+    <a href="" class="logo">
+        <span class="logo-light">
+            <span class="logo-lg"><img src="images/logo-light.svg" alt="Code Graph" /></span>
+            <span class="logo-sm"><img src="images/logo-sm.svg" alt="" /></span>
+        </span>
+        <span class="logo-dark">
+            <span class="logo-lg"><img src="images/logo-dark.svg" alt="Code Graph" /></span>
+            <span class="logo-sm"><img src="images/logo-sm.svg" alt="" /></span>
+        </span>
+    </a>
+
+    <button type="button" class="button-sm-hover" data-mf-action="toggle-hover" aria-label="Pin or unpin the menu">
+        <i class="ti ti-circle align-middle"></i>
+    </button>
+    <button type="button" class="button-close-fullsidebar" data-mf-action="close-menu" aria-label="Close menu">
+        <i class="ti ti-x align-middle"></i>
+    </button>
+
+    <div class="sidenav-scroll">
+        <ul class="side-nav">
+            @foreach (NavItem item in Items)
+            {
+                if (item.IsTitle)
+                {
+                    <li class="side-nav-title">@item.Text</li>
+                }
+                else
+                {
+                    <li class="side-nav-item">
+                        <NavLink class="side-nav-link" href="@item.Href" Match="NavLinkMatch.All">
+                            @if (item.Icon is not null)
+                            {
+                                <span class="menu-icon"><i class="@item.Icon"></i></span>
+                            }
+                            <span class="menu-text">@item.Text</span>
+                        </NavLink>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<NavItem> Items { get; set; } = [];
+}

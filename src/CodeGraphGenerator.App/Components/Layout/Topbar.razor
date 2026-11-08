@@ -1,0 +1,35 @@
+@* Sticky topbar (MyFav1): menu toggle on the left; theme settings and the light / dark toggle on the right. *@
+<header class="app-topbar">
+    <div class="topbar-menu">
+        <div class="d-flex align-items-center gap-2">
+            <a href="" class="logo">
+                <span class="logo-light">
+                    <span class="logo-lg"><img src="images/logo-light.svg" alt="Code Graph" /></span>
+                    <span class="logo-sm"><img src="images/logo-sm.svg" alt="" /></span>
+                </span>
+                <span class="logo-dark">
+                    <span class="logo-lg"><img src="images/logo-dark.svg" alt="Code Graph" /></span>
+                    <span class="logo-sm"><img src="images/logo-sm.svg" alt="" /></span>
+                </span>
+            </a>
+
+            <button type="button" class="sidenav-toggle-button" data-mf-action="toggle-menu" aria-label="Toggle menu">
+                <i class="ti ti-menu-deep"></i>
+            </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="topbar-item">
+                <button type="button" class="topbar-link" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" aria-label="Theme settings">
+                    <i class="ti ti-settings"></i>
+                </button>
+            </div>
+
+            <div class="topbar-item">
+                <button type="button" class="topbar-link" data-mf-action="toggle-theme" aria-label="Light or dark mode">
+                    <i class="ti ti-moon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>

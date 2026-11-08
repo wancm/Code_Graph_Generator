@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
+    <!-- PrivateAssets="none": the package ships its BuildHost (the process that runs MSBuild) as content
+         files, and those only reach the app's output folder if they flow to projects that reference this one. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.9.0" PrivateAssets="none" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Html\GraphTemplate.html" LogicalName="CodeGraphGenerator.Core.GraphTemplate.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeGraphGenerator.Tests" />
+  </ItemGroup>
+
+</Project>

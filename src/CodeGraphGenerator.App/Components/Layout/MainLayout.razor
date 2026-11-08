@@ -1,0 +1,36 @@
+@inherits LayoutComponentBase
+
+@* MyFav1 app shell: sidebar + topbar + content + footer + theme settings panel. *@
+<div class="wrapper">
+    <Sidebar Items="Menu" />
+    <Topbar />
+
+    <div class="page-content">
+        <div class="page-container">
+            @Body
+        </div>
+
+        <footer class="footer">
+            <div class="page-container">
+                <span title="@Glossary.Version.Tooltip">Code Graph Generator @Version</span>
+                <span class="text-muted"> · reads C# with Roslyn; nothing leaves this PC</span>
+            </div>
+        </footer>
+    </div>
+
+    <div class="sidenav-backdrop" data-mf-action="close-menu"></div>
+</div>
+
+<ThemeSettings />
+
+@code {
+    private static readonly IReadOnlyList<NavItem> Menu =
+    [
+        NavItem.Title("Code graph"),
+        NavItem.Link("Generate", "", "ti ti-topology-star-3"),
+        NavItem.Link("Readme", "readme", "ti ti-book")
+    ];
+
+    private static readonly string Version =
+        typeof(MainLayout).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+}

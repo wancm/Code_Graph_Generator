@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CodeGraphGenerator.Core/CodeGraphGenerator.Core.csproj" />
+    <Project Path="src/CodeGraphGenerator.App/CodeGraphGenerator.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CodeGraphGenerator.Tests/CodeGraphGenerator.Tests.csproj" />
+  </Folder>
+</Solution>

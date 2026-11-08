@@ -1,0 +1,247 @@
+@page "/"
+@implements IDisposable
+@inject DesktopDialogs Dialogs
+@inject SettingsStore Settings
+@inject GenerationService Generator
+
+<div class="page-title-head">
+    <div class="flex-grow-1">
+        <h4 class="page-title"><MfTerm Term="Glossary.CodeGraph" /></h4>
+        <p class="text-muted mb-0 fs-13">
+            Pick the folder of a C# code base. Roslyn reads it on this PC, and the graph is written as one HTML file
+            that opens offline and can be shared.
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-7">
+        <MfCard Title="Code base" Divider="true">
+            <ChildContent>
+                <div class="mb-3">
+                    <label class="form-label" for="folder">Folder</label>
+                    <div class="input-group">
+                        <input id="folder" class="form-control cg-path" readonly value="@_folder" placeholder="No folder selected yet" />
+                        <button type="button" class="btn btn-primary" disabled="@Generator.IsRunning" @onclick="SelectFolderAsync">
+                            <i class="ti ti-folder-open me-1"></i><MfTerm Term="Glossary.SelectFolder" />
+                        </button>
+                    </div>
+                </div>
+
+                @if (_searching)
+                {
+                    <p class="text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Looking for solutions and projects…</p>
+                }
+                else if (_folder is not null && _candidates.Count == 0)
+                {
+                    <div class="alert alert-warning">No .sln, .slnx or .csproj file in this folder or up to 4 folders below it.</div>
+                }
+                else if (_candidates.Count > 0)
+                {
+                    <div class="mb-3">
+                        <label class="form-label" for="codebase"><MfTerm Term="Glossary.CodeBase" /></label>
+                        @if (_candidates.Count == 1)
+                        {
+                            <div class="form-control-plaintext cg-path py-0">@_candidates[0].Display</div>
+                        }
+                        else
+                        {
+                            <select id="codebase" class="form-select" @bind="_choice" disabled="@Generator.IsRunning">
+                                @for (int i = 0; i < _candidates.Count; i++)
+                                {
+                                    <option value="@i">@_candidates[i].Display</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label" for="output"><MfTerm Term="Glossary.OutputFile" /></label>
+                    <div class="input-group">
+                        <input id="output" class="form-control cg-path" readonly value="@_output" placeholder="Select a folder first" />
+                        <button type="button" class="btn btn-light" disabled="@(Generator.IsRunning || _output is null)" @onclick="ChangeOutputAsync">
+                            <i class="ti ti-pencil me-1"></i>Change
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="restore" @bind="_restore" disabled="@Generator.IsRunning" />
+                    <label class="form-check-label" for="restore"><MfTerm Term="Glossary.RestoreFirst" /></label>
+                    <div class="form-text">
+                        Leave it on unless the code base is already restored with the .NET SDK its folder uses. Without it,
+                        Roslyn may find none of .NET's own types and miss most links.
+                    </div>
+                </div>
+            </ChildContent>
+            <Footer>
+                @if (Generator.IsRunning)
+                {
+                    <span class="spinner-border spinner-border-sm text-primary me-2 align-middle"></span>
+                    <span class="me-3 align-middle">Generating…</span>
+                    <button type="button" class="btn btn-light" @onclick="Generator.Cancel"><i class="ti ti-x me-1"></i>Cancel</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled="@(!CanGenerate)" @onclick="GenerateAsync">
+                        <i class="ti ti-topology-star-3 me-1"></i><MfTerm Term="Glossary.Generate" />
+                    </button>
+                }
+            </Footer>
+        </MfCard>
+
+        @if (Generator.Result is { } result)
+        {
+            CodeGraph graph = result.Graph;
+            int unreferenced = graph.Nodes.Count(n => n.Reference == ReferenceState.Unreferenced);
+            int testsOnly = graph.Nodes.Count(n => n.Reference == ReferenceState.TestsOnly);
+
+            <div class="row row-cols-md-4 row-cols-2 text-center">
+                <div class="col"><MfStatCard Label="Types" Value="@Count(graph.Nodes.Count)" Icon="solar:widget-4-bold-duotone" /></div>
+                <div class="col"><MfStatCard Label="Links" Term="Glossary.Link" Value="@Count(graph.Edges.Count)" Icon="solar:routing-2-bold-duotone" IconClass="text-bg-info" /></div>
+                <div class="col"><MfStatCard Label="Projects" Value="@Count(graph.Projects.Count)" Icon="solar:folder-with-files-bold-duotone" IconClass="text-bg-success" /></div>
+                <div class="col"><MfStatCard Label="No incoming references" Term="Glossary.NoIncomingReferences" Value="@Count(unreferenced)" Icon="solar:danger-triangle-bold-duotone" IconClass="text-bg-danger" /></div>
+            </div>
+
+            <MfCard Title="Code graph written" Subtitle="@result.OutputPath">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary" @onclick="() => DesktopDialogs.Open(result.OutputPath)">
+                        <i class="ti ti-external-link me-1"></i>Open code graph
+                    </button>
+                    <button type="button" class="btn btn-light" @onclick="() => DesktopDialogs.ShowInFolder(result.OutputPath)">
+                        <i class="ti ti-folder me-1"></i>Show in folder
+                    </button>
+                </div>
+                <p class="text-muted mt-3 mb-0">
+                    Generated from @graph.Source in @result.Duration.TotalSeconds.ToString("N1", CultureInfo.InvariantCulture) s.
+                    @Count(unreferenced) @(unreferenced == 1 ? "type has" : "types have")
+                    <MfTerm Term="Glossary.NoIncomingReferences" Label="no incoming references" />;
+                    @Count(testsOnly) <MfTerm Term="Glossary.OnlyTestsUseIt" Label="only tests use" />.
+                </p>
+                @if (graph.Warnings.Count > 0)
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <h5 class="fs-14 fw-semibold"><i class="ti ti-alert-triangle me-1"></i>Warnings (@Count(graph.Warnings.Count))</h5>
+                        <ul class="mb-0 ps-3">
+                            @foreach (string warning in graph.Warnings)
+                            {
+                                <li>@warning</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </MfCard>
+        }
+        else if (Generator.Error is { } error && !Generator.IsRunning)
+        {
+            <div class="alert alert-danger"><i class="ti ti-alert-circle me-1"></i>@error</div>
+        }
+    </div>
+
+    <div class="col-xl-5">
+        <MfCard Title="Progress" Subtitle="Newest first">
+            @if (Generator.Lines.Count == 0)
+            {
+                <p class="text-muted mb-0">Nothing yet. Progress shows here while the code graph is generated.</p>
+            }
+            else
+            {
+                <div class="cg-progress">
+                    @foreach (ProgressLine line in Generator.Lines.Reverse())
+                    {
+                        <div class="@(line.IsError ? "text-danger" : "")" title="@line.At.ToString("yyyy-MM-dd HH:mm:ss.fff")">
+                            <span class="cg-time">@line.At.ToString("HH:mm:ss")</span>@line.Text
+                        </div>
+                    }
+                </div>
+            }
+        </MfCard>
+    </div>
+</div>
+
+@code {
+    private string? _folder;
+
+    private IReadOnlyList<CodeBaseCandidate> _candidates = [];
+
+    private int _choice;
+
+    private string? _output;
+
+    private bool _restore = true;
+
+    private bool _searching;
+
+    private bool CanGenerate => !Generator.IsRunning && !_searching && _candidates.Count > 0 && _output is not null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Generator.Changed += OnGeneratorChanged;
+        _restore = Settings.Current.RestoreFirst;
+
+        if (Settings.Current.LastFolder is { } last && Directory.Exists(last))
+        {
+            await UseFolderAsync(last);
+        }
+    }
+
+    private async Task SelectFolderAsync()
+    {
+        string? picked = await Dialogs.PickFolderAsync(_folder ?? Settings.Current.LastFolder);
+
+        if (picked is not null)
+        {
+            await UseFolderAsync(picked);
+            Settings.Save(Settings.Current with { LastFolder = picked });
+        }
+    }
+
+    private async Task UseFolderAsync(string folder)
+    {
+        _folder = folder;
+        _candidates = [];
+        _choice = 0;
+        _searching = true;
+        StateHasChanged();
+
+        _candidates = await Task.Run(() => CodeBaseFinder.Find(folder));
+        _searching = false;
+
+        string name = new DirectoryInfo(folder).Name;
+        _output = Path.Combine(Settings.Current.OutputFolder ?? SettingsStore.DefaultOutputFolder, $"{name}-code-graph.html");
+    }
+
+    private async Task ChangeOutputAsync()
+    {
+        if (_output is null)
+        {
+            return;
+        }
+
+        string? picked = await Dialogs.PickOutputFileAsync(_output);
+
+        if (picked is not null)
+        {
+            _output = picked;
+            Settings.Save(Settings.Current with { OutputFolder = Path.GetDirectoryName(picked) });
+        }
+    }
+
+    private async Task GenerateAsync()
+    {
+        if (!CanGenerate || _folder is null || _output is null)
+        {
+            return;
+        }
+
+        Settings.Save(Settings.Current with { RestoreFirst = _restore });
+        await Generator.RunAsync(_candidates[Math.Clamp(_choice, 0, _candidates.Count - 1)], _folder, _restore, _output);
+    }
+
+    private void OnGeneratorChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private static string Count(int value) => value.ToString("N0", CultureInfo.InvariantCulture);
+
+    public void Dispose() => Generator.Changed -= OnGeneratorChanged;
+}

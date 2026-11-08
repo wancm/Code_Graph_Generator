@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- A WPF window that hosts Blazor (BlazorWebView): Blazor for the UI, WPF for the native folder dialog. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- A Windows version in the TFM brings Microsoft.Windows.SDK.NET, which the .NET 10 WebView2 control loads. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>CodeGraphGenerator.App</RootNamespace>
+    <AssemblyName>CodeGraphGenerator</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="10.0.120" />
+    <PackageReference Include="Markdig" Version="1.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeGraphGenerator.Core\CodeGraphGenerator.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The Readme page shows this file. -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

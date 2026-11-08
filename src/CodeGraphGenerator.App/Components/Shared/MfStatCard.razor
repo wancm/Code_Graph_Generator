@@ -1,0 +1,33 @@
+@* MyFav1 KPI tile, centred: muted uppercase label, round solid icon + bold value. *@
+<div class="card @Class">
+    <div class="card-body">
+        <h5 class="text-muted fs-13 text-uppercase mb-0">
+            @if (Term is not null)
+            {
+                <MfTerm Term="Term" Label="@Label" />
+            }
+            else
+            {
+                @Label
+            }
+        </h5>
+        <div class="d-flex align-items-center justify-content-center gap-2 my-2 py-1">
+            <div class="user-img fs-42 flex-shrink-0">
+                <span class="avatar-title @IconClass rounded-circle fs-22">
+                    <iconify-icon icon="@Icon"></iconify-icon>
+                </span>
+            </div>
+            <h3 class="mb-0 fw-bold">@Value</h3>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public GlossaryTerm? Term { get; set; }
+    /// <summary>Iconify name; Solar duotone icons match the theme.</summary>
+    [Parameter] public string Icon { get; set; } = "solar:chart-2-bold-duotone";
+    [Parameter] public string IconClass { get; set; } = "text-bg-primary";
+    [Parameter] public string? Class { get; set; }
+}

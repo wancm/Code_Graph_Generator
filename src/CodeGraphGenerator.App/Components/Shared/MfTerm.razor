@@ -1,0 +1,11 @@
+@* A label that uses a glossary term: the Display term with the "{Standard term}: {Explanation}" tooltip.
+   Tooltips are created lazily by myfav1.js. *@
+<span class="mf-term @Class" tabindex="0" data-bs-toggle="tooltip" data-bs-placement="@Placement" data-bs-title="@Term.Tooltip">@(Label ?? Term.Display)</span>
+
+@code {
+    [Parameter, EditorRequired] public GlossaryTerm Term { get; set; } = default!;
+    /// <summary>Override the visible text.</summary>
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string Placement { get; set; } = "top";
+    [Parameter] public string? Class { get; set; }
+}
