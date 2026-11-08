@@ -32,6 +32,36 @@ dotnet run --project src\CodeGraphGenerator.App
 - **.NET 10 SDK**。不只是编译本程序要用：Roslyn 读别人的代码库时，要靠本机的 .NET SDK 跑 MSBuild。
 - 窗口里的 Bootstrap 样式和图标来自 CDN，离线时窗口会少一些样式；**生成的 HTML 完全离线可用**。
 
+## 打包给没装 .NET 的电脑（Release 版）
+
+想把程序直接拷给别人用、对方电脑又没装 .NET，就运行：
+
+```bat
+cmd\build-release-run.cmd
+```
+
+它做三件事：
+
+1. 先删掉旧的 `run\` 文件夹，免得上一次打包留下的旧文件混进来。
+2. 用 `dotnet publish` 打出 **Release、win-x64、自带 .NET 运行时（self-contained）** 的版本，放到仓库根目录的 `run\` 里。运行时已经打包进去，所以对方电脑不装 .NET 也能打开窗口。
+3. 检查 `run\CodeGraphGenerator.exe` 是否生成了。
+
+输出放在 `run\`，不放 `bin\` / `obj\`：后两个被 `.gitignore` 忽略，`run\` 没有。目前 `run\` 大约 **183 MB、342 个文件**，单个文件都小于 50 MB（GitHub 单文件上限 100 MB）。
+
+具体参数：`-c Release -r win-x64 --self-contained true -o run`，另加 `-p:SatelliteResourceLanguages=en`（只留英文资源，去掉 Roslyn 和 WPF 十几种语言的资源文件夹）和 `-p:DebugType=None -p:DebugSymbols=false`（不带 `.pdb` 调试文件）。
+
+**为什么不打成单个 exe（single-file）？** Roslyn 读代码时，要从 exe 旁边的 `BuildHost-netcore\` 和 `BuildHost-net472\` 文件夹启动一个单独的 MSBuild 进程。实测打成单个文件后会报 `The build host could not be found`，什么代码库都读不了；按文件夹发布则正常。所以要把**整个 `run\` 文件夹**拷过去，在那边双击 `CodeGraphGenerator.exe`。
+
+**对方电脑还需要：**
+
+| 需要 | 为什么 |
+|---|---|
+| Windows 10 / 11（64 位） | 打包的是 win-x64 版本 |
+| WebView2 运行时 | 窗口界面靠它显示；Windows 11 自带，多数 Windows 10 也有 |
+| **.NET SDK**（光有运行时不够） | 打开窗口不需要，但点 **Generate** 读代码库就需要：Roslyn 通过 `dotnet` 启动 MSBuild（`BuildHost-netcore` 至少要 .NET 8），**Run dotnet restore first** 也是直接调用 `dotnet restore`。SDK 要能编译要读的那个代码库（看它的 `global.json` 和目标框架），例如读 .NET 10 项目就装 .NET 10 SDK。没有 SDK 时窗口能打开，但生成会失败 |
+| 网络（可选） | 窗口的部分样式来自 CDN；生成的 HTML 完全离线可用 |
+| Claude Code（可选） | 只有用 AI 描述功能时才需要 |
+
 ## 怎么用
 
 1. 点 **Select folder**，选代码库所在的文件夹，例如 `C:\onecm\wcms`。
@@ -139,6 +169,8 @@ dotnet run --project src\CodeGraphGenerator.App
 | `tests/CodeGraphGenerator.Tests` | xUnit 测试 |
 | `tests/Fixtures/SampleShop` | 测试用的小代码库：领域项目、带顶层语句的程序、Razor 组件库、测试项目，每种规则都有例子 |
 | `cmd/startup.cmd` | 编译并打开窗口 |
+| `cmd/build-release-run.cmd` | 打包 Release、win-x64、自带 .NET 运行时的版本到 `run/`，给没装 .NET 的电脑用 |
+| `run/` | `cmd/build-release-run.cmd` 的输出（每次打包前先清空）；没有被 `.gitignore` 忽略 |
 
 ## 测试
 
